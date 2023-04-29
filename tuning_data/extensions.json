@@ -1,0 +1,20 @@
+[
+    {
+        "text": "Open websites and navigate the internet using Chrome or any web browser. You can easily access your favorite webpages by asking me to 'open [website name]', such as 'open YouTube', 'open Google', or 'open ANSA'",
+        "timestamp": "2023-04-14 15:47:56",
+        "tag": "core-extension",
+        "json": "{\\\"description\\\": \\\"Open websites and navigate the internet using Chrome or any web browser. You can easily access your favorite webpages by asking me to 'open [website name]', such as 'open YouTube', 'open Google', or 'open ANSA'\\\", \\\"file\\\": \\\"open_websites.py\\\", \\\"args\\\": [\\\"https://WEBSITE_YOU_WANT_TO_OPEN\\\"],\\\"tag\\\": \\\"extension\\\"}"
+    },
+    {
+        "text": "code analysis. It reads the contents of a code file and generates a structured code report on its content, which can be saved as a Word document, this report it's useful if the user needs an analysis of the code, e.g: 'can you write a code report?' 'extensive code report on this file please' 'write a code report on this file test.py'",
+        "timestamp": "2023-04-14 15:47:56",
+        "tag": "core-extension",
+        "json": "{\\\"description\\\": \\\"it is a tool for performing code analysis. It reads the contents of a code file and generates a structured report on its content, which can be saved as a Word document, this report it's useful if the user needs an analysis of the code\\\", \\\"file\\\": \\\"code_report.py\\\", \\\"args\\\": [\\\"file_path_to_open\\\"],\\\"output\\\": [],\\\"tag\\\": \\\"core-extension\\\"}"
+    },
+    {
+        "text": "improving the quality of code. it reads the contents of a code file and analyzes it to identify areas for improvement, such as bugs, inefficient code, poor readability, or lack of comments. The tool then suggests changes to the code, including bug fixes, refactoring to improve design and maintainability, optimization to improve performance, and adding appropriate comments to enhance readability and documentation. e.g.: 'can you refactor this file test.py?' 'can you fix the bug in this file attempt.py?'",
+        "timestamp": "2023-04-14 15:47:56",
+        "tag": "core-extension",
+        "json": "{\\\"description\\\": \\\"This is a tool for improving the quality of code. It reads the contents of a code file and analyzes it to identify areas for improvement, such as bugs, inefficient code, poor readability, or lack of comments. The tool then suggests changes to the code, including bug fixes, refactoring to improve design and maintainability, optimization to improve performance, and adding appropriate comments to enhance readability and documentation. e.g.: 'can you refactor this file test.py?' 'can you fix the bug in this file attempt.py?' \\\", \\\"file\\\": \\\"code_refactoring.py\\\", \\\"args\\\": [\\\"file_path_to_open\\\"],\\\"output\\\": [],\\\"tag\\\": \\\"core-extension\\\"}"
+    }
+]

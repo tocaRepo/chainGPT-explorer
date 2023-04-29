@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>My App</title>
+    <!-- Bootstrap CSS -->
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .pulsing {
+            animation: pulse 1s ease-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+    <style>
+        svg {
+            width: 1200px;
+            height: 800px;
+        }
+
+        .node {
+            cursor: move;
+            fill-opacity: .9;
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+
+        .link {
+            fill: none;
+            stroke: #999;
+            stroke-opacity: 0.6;
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>ChainGPT explorer</h1>
+        <div class="form-group">
+            <textarea id="task_prompt" class="form-control" name="w3review" rows="4" cols="50">
+            </textarea>
+
+        </div>
+        <div class="row">
+            <div class="col-1">
+                <button id="startTaskBtn" class="btn btn-primary">Start Task</button>
+            </div>
+            <div class="col-2">
+                <button id="stopTaskBtn" class="btn btn-primary">Stop simulation</button>
+            </div>
+            <div class="col-2">
+                <button id="replayTaskBtn" class="btn btn-primary">Replay Task</button>
+            </div>
+            <div class="col-2">
+                <a href="/drop_folder"><button id="dropFolderTaskBtn" class="btn btn-primary">Drop Folder</button></a>
+            </div>
+        </div>
+        <hr>
+        <div id="response"></div>
+
+        <div id="state-diagram"><svg></svg></div>
+
+
+
+    </div>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script>
+        // Define state machine
+
+        var width = 1200,
+            height = 800;
+        // Define the statuses
+        const statuses = [
+            { id: "CREATED", group: 1 },
+            { id: "STARTED", group: 1 },
+            { id: "NOT_SUPPORTED", group: 5 },
+            { id: "QUEUED", group: 1 },
+            { id: "SELF_REFLECTION", group: 2 },
+            { id: "EXECUTION", group: 2 },
+            { id: "ERROR", group: 3 },
+            { id: "FINISHED", group: 4 },
+        ];
+
+        // Define the links between statuses
+        const links = [
+            { source: "CREATED", target: "STARTED" },
+            { source: "STARTED", target: "QUEUED" },
+            { source: "QUEUED", target: "SELF_REFLECTION" },
+            { source: "SELF_REFLECTION", target: "EXECUTION" },
+            { source: "EXECUTION", target: "FINISHED" },
+            { source: "EXECUTION", target: "ERROR" },
+            { source: "ERROR", target: "SELF_REFLECTION" },
+            { source: "SELF_REFLECTION", target: "NOT_SUPPORTED" },
+
+        ];
+
+        // Create the SVG element
+        const svg = d3.select("svg");
+
+        // Create the force simulation
+        const simulation = d3.forceSimulation()
+            .force("link", d3.forceLink().id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-100))
+            .force("center", d3.forceCenter(width / 2, height / 4));
+
+        // Add the links to the visualization
+        const link = svg.append("g")
+            .attr("class", "links")
+            .selectAll("line")
+            .data(links)
+            .enter().append("line")
+
+            .attr("class", "link");
+
+        // Add the nodes to the visualization
+        const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("circle")
+            .data(statuses)
+            .enter().append("g")
+            .attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")" })
+            ;
+        node.append("circle")
+            .attr("class", function (d) { return "nodes " + d.id })
+            .attr("r", 40)
+
+            .attr("cx", function (d) { return d; })
+            .attr("cy", function (d) { return d; })
+            .attr("fill", d => {
+                switch (d.group) {
+                    case 1:
+                        return "#1f77b4";
+                    case 2:
+                        return "#ff7f0e";
+                    case 3:
+                        return "#d62728";
+                    case 4:
+                        return "#007500";
+                    case 5:
+                        return "#ECF87F";
+                }
+            })
+            .call(drag(simulation))
+            .on("mouseover", function (event, d) {
+                d3.select(this).attr("stroke", "black");
+            })
+            .on("mouseout", function (event, d) {
+                d3.select(this).attr("stroke", null);
+            });
+
+        node.append("title")
+            .text(d => d.id);
+
+        node.append("text")
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("fill", "black")
+            .style("font-size", "10px")
+            .text(d => d.id);
+
+        simulation.nodes(statuses)
+            .on("tick", ticked);
+
+        simulation.force("link")
+            .links(links);
+        simulation.alpha(1).restart();
+        // Define the drag behavior
+        function drag(simulation) {
+            function dragStarted(event) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                event.subject.fx = event.subject.x;
+                event.subject.fy = event.subject.y;
+            }
+
+            function dragged(event) {
+                event.subject.fx = event.x;
+                event.subject.fy = event.y;
+            }
+
+            function dragEnded(event) {
+                if (!event.active) simulation.alphaTarget(0);
+                event.subject.fx = null;
+                event.subject.fy = null;
+            }
+
+            return d3.drag()
+                .on("start", dragStarted)
+                .on("drag", dragged)
+                .on("end", dragEnded);
+        }
+
+        // Update the position of the nodes and links in the visualization
+        function ticked() {
+            link.attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            // node.attr("cx", d => d.x)
+            //     .attr("cy", d => d.y);
+            node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")" });
+
+        }
+
+        function pulseElements(className, startPulsing) {
+            const elements = $(`.${className}`);
+            if (startPulsing) {
+                elements.addClass('pulsing');
+            } else {
+                elements.removeClass('pulsing');
+            }
+        }
+        $(document).ready(function () {
+            var global_status = ""
+            var intervalPollBinder
+            // Handle start task button click
+            $('#startTaskBtn').click(function () {
+                // Send API request to /api/start_task
+                $.ajax({
+                    url: '/api/task/start',
+                    type: 'POST',
+                    data: JSON.stringify({ 'task_prompt': $('#task_prompt').val() }),
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    success: function (data) {
+                        global_status = data.status
+                        pulseElements(global_status, true)
+                        pollTaskStatus()
+                        // Display response in response div
+                        //$('#response').html(JSON.stringify(data));
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        // Display error message in response div
+                        $('#response').html('Error: ' + textStatus + ' ' + errorThrown);
+                    }
+                });
+            });
+            $('#stopTaskBtn').click(function () {
+                // Send API request to /api/start_task
+                clearInterval(intervalPollBinder);
+                pulseElements(global_status, false)
+            });
+            var executionTime = [];
+            var statuses = [];
+            $('#replayTaskBtn').click(function () {
+                // Send API request to /api/task/status/journal
+                $.ajax({
+                    url: "/api/task/status/journal",
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        var journal = data.journal;
+
+
+                        // Loop through the journal array and extract status and timestamp values
+                        for (var i = 0; i < journal.length; i++) {
+                            var entry = journal[i];
+                            statuses.push(entry.status);
+                        }
+                        for (var i = 0; i < journal.length - 1; i++) {
+                            var start = Date.parse(journal[i].timestamp);
+                            var end = Date.parse(journal[i + 1].timestamp);
+                            var diff = end - start;
+                            executionTime.push(diff);
+                        }
+                        // The last execution time will be 5000 ms
+                        executionTime.push(5000);
+                        // Log the status and execution time arrays to the console
+                        console.log("Statuses:", statuses);
+                        console.log("Execution Times:", executionTime);
+
+                        // Start pulsing elements for each status for the amount of time defined in the execution time
+                        var i = 0
+
+                        var next_execution = (parseInt(executionTime[i]) + 1500)
+                        loop(next_execution, statuses, executionTime, i)
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log("Error polling task status:", textStatus, errorThrown);
+                        // const journalString = '{"journal":[{"status":"CREATED","timestamp":"2023-04-28T08:19:44.791267"},{"status":"QUEUED","timestamp":"2023-04-28T08:19:44.791267"},{"status":"SELF_REFLECTION","timestamp":"2023-04-28T08:19:44.792276"},{"status":"EXECUTION","timestamp":"2023-04-28T08:20:06.919339"},{"status":"SELF_REFLECTION","timestamp":"2023-04-28T08:20:07.427856"},{"status":"EXECUTION","timestamp":"2023-04-28T08:20:30.263004"},{"status":"SELF_REFLECTION","timestamp":"2023-04-28T08:20:30.777933"},{"status":"ERROR","timestamp":"2023-04-28T08:20:50.782898"}]}';
+
+                        // var journal = JSON.parse(journalString);
+                        // journal = journal["journal"]
+
+
+                    }
+                });
+            });
+
+
+            function loop(timing, statuses, executionTime, i) {
+
+                console.debug("execute:" + i)
+                var statusName = statuses[i];
+                console.log(statusName)
+                console.log("executionTime[i]:" + executionTime[i])
+                pulseElements(statusName, true);
+                setTimeout(function () {
+                    pulseElements(statusName, false);
+                }, (parseInt(executionTime[i]) + 1000));
+                i++
+                timing = (parseInt(executionTime[i - 1]) + 1500)
+                console.debug("increment:" + i + " wait for:" + timing + " before executing" + statuses[i])
+                if (i < executionTime.length + 1)
+                    window.setTimeout(function () {
+                        loop(timing, statuses, executionTime, i);
+                    }, timing);
+            }
+
+            function pollTaskStatus() {
+                intervalPollBinder = setInterval(function () {
+                    $.ajax({
+                        url: "/api/task/status",
+                        type: "GET",
+                        dataType: "json",
+                        success: function (data) {
+                            if (data.status != global_status) {
+                                pulseElements(global_status, false)
+                                global_status = data.status
+                                pulseElements(global_status, true)
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            console.log("Error polling task status:", textStatus, errorThrown);
+                        }
+                    });
+                }, 2000);
+            }
+
+
+        });
+    </script>
+</body>
+
+</html>
