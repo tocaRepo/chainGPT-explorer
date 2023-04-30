@@ -30,7 +30,7 @@
     </style>
     <style>
         svg {
-            width: 1200px;
+            width: 600px;
             height: 800px;
         }
 
@@ -50,33 +50,41 @@
     </style>
 </head>
 
-<body>
+<body style="background: #2C3333;">
     <div class="container">
-        <h1>ChainGPT explorer</h1>
-        <div class="form-group">
-            <textarea id="task_prompt" class="form-control" name="w3review" rows="4" cols="50">
-            </textarea>
-
-        </div>
+        <h1 class="text-white">ChainGPT explorer</h1>
         <div class="row">
-            <div class="col-1">
-                <button id="startTaskBtn" class="btn btn-primary">Start Task</button>
+            <div class="col-4">
+                <div class="form-group">
+                    <textarea id="task_prompt" class="form-control" name="w3review" rows="4" cols="50">
+                    </textarea>
+
+                </div>
+                <div class="row">
+                    <div class="col-4">
+                        <button id="startTaskBtn" class="btn btn-primary">Start Task</button>
+                    </div>
+                    <div class="col-6">
+                        <button id="stopTaskBtn" class="btn btn-primary">Stop simulation</button>
+                    </div>
+                </div>
+<br><br>
+                <div class="row">
+                    <div class="col-4">
+                        <button id="replayTaskBtn" class="btn btn-primary">Replay Task</button>
+                    </div>
+                    <div class="col-6">
+                        <a href="/drop_folder"><button id="dropFolderTaskBtn" class="btn btn-primary">Drop
+                                Folder</button></a>
+                    </div>
+                </div>
+                <hr>
+                <div id="response"></div>
             </div>
-            <div class="col-2">
-                <button id="stopTaskBtn" class="btn btn-primary">Stop simulation</button>
-            </div>
-            <div class="col-2">
-                <button id="replayTaskBtn" class="btn btn-primary">Replay Task</button>
-            </div>
-            <div class="col-2">
-                <a href="/drop_folder"><button id="dropFolderTaskBtn" class="btn btn-primary">Drop Folder</button></a>
+            <div class="col-8">
+                <div id="state-diagram"><svg></svg></div>
             </div>
         </div>
-        <hr>
-        <div id="response"></div>
-
-        <div id="state-diagram"><svg></svg></div>
-
 
 
     </div>
@@ -85,7 +93,7 @@
     <script>
         // Define state machine
 
-        var width = 1200,
+        var width = 600,
             height = 800;
         // Define the statuses
         const statuses = [
